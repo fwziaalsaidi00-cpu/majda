@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة أترك ما لا يعنيني - الصف السادس</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .teacher-bg-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-10deg);
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: rgba(147, 51, 234, 0.08);
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 0;
+            user-select: none;
+        }
+
+        .option-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .bounce-anim {
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        .pulse-btn {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 relative overflow-x-hidden">
+
+    <div class="w-full max-w-2xl bg-white rounded-3xl glass-card p-6 md:p-8 relative z-10 my-6">
+        
+        <!-- Background Teacher Note -->
+        <div class="teacher-bg-text">
+            أستاذة سمية تتمنى لكم دوام التقدم دائماً ✨
+        </div>
+
+        <!-- Audio Controls Top Right -->
+        <div class="flex justify-between items-center mb-6 z-10 relative">
+            <div class="flex items-center space-x-2 space-x-reverse bg-purple-100 px-3 py-1.5 rounded-full border border-purple-200">
+                <i class="fas fa-book-open text-purple-600"></i>
+                <span class="text-xs md:text-sm font-bold text-purple-800">تربية إسلامية - الصف السادس</span>
+            </div>
+            <button id="bgmToggle" onclick="toggleAudio()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold p-2.5 rounded-full transition flex items-center justify-center shadow-md">
+                <i id="bgmIcon" class="fas fa-music"></i>
+            </button>
+        </div>
+
+        <!-- Game Title -->
+        <div class="text-center mb-6 z-10 relative">
+            <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 mb-1">
+                🌟 لعبة: أترك ما لا يعنيني 🌟
+            </h1>
+            <p class="text-gray-600 text-sm font-semibold">عَنْ أَبِي هُرَيْرَةَ رَضِيَ اللَّهُ عَنْهُ قَالَ: قَالَ رَسُولُ اللَّهِ ﷺ: "مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ"</p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="text-center py-8 z-10 relative">
+            <div class="text-6xl mb-6 bounce-anim">⭐</div>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">أهلاً بك يا بطل المستقبل! 🚀</h2>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">هل أنت مستعد لاختبار معلوماتك في درس "أترك ما لا يعنيني" وحصد النقاط الكاملة؟</p>
+            <button onclick="startGame()" class="pulse-btn bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-lg px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition transform">
+                ابدأ اللعبة الآن <i class="fas fa-play mr-2"></i>
+            </button>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quizContainer" class="hidden z-10 relative">
+            
+            <div class="flex justify-between items-center mb-4 text-sm font-bold text-gray-600">
+                <span>السؤال <span id="currentQNum" class="text-purple-600">1</span> من 7</span>
+                <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-300">النقاط: <span id="score">0</span> 🏆</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 14%"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-purple-50/80 p-5 rounded-2xl border-2 border-purple-200 mb-6 relative">
+                <h3 id="questionText" class="text-lg md:text-xl font-bold text-gray-800 leading-relaxed text-center">
+                    جاري تحميل السؤال...
+                </h3>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                <!-- Dynamic Options -->
+            </div>
+
+            <!-- Feedback Alert Box -->
+            <div id="feedbackBox" class="hidden p-4 rounded-2xl text-center font-black text-lg mb-4 transition-all">
+                <!-- Feedback Content -->
+            </div>
+
+            <!-- Next Button -->
+            <div class="text-center">
+                <button id="nextBtn" onclick="nextQuestion()" class="hidden bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition">
+                    السؤال التالي <i class="fas fa-arrow-left mr-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultScreen" class="hidden text-center py-6 z-10 relative">
+            <div id="resultIcon" class="text-7xl mb-4">🏆</div>
+            <h2 id="resultTitle" class="text-2xl font-black text-gray-800 mb-2">ممتاز يا مبدع!</h2>
+            <p id="resultMessage" class="text-gray-600 font-bold mb-6">لقد أكملت جميع الأسئلة بنجاح!</p>
+            
+            <div class="bg-gradient-to-r from-purple-100 to-indigo-100 p-6 rounded-2xl border-2 border-purple-300 mb-6 max-w-sm mx-auto">
+                <span class="block text-gray-600 font-bold text-sm mb-1">النتيجة النهائية</span>
+                <span id="finalScore" class="text-4xl font-black text-purple-700">7 / 7</span>
+            </div>
+
+            <!-- Footer Teacher Wish -->
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl mb-6">
+                <p class="text-amber-800 font-bold text-md">
+                    🌸 أستاذة سمية تتمنى لكم دوام التقدم دائماً 🌸
+                </p>
+            </div>
+
+            <button onclick="restartGame()" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-lg px-8 py-3 rounded-2xl shadow-lg hover:shadow-xl transition">
+                إعادة اللعبة <i class="fas fa-redo mr-2"></i>
+            </button>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-500 font-bold">
+            أستاذة سمية تتمنى لكم دوام التقدم دائماً ❤️
+        </div>
+    </div>
+
+    <script>
+        // Questions Array (7 Educational Questions for Grade 6)
+        const questions = [
+            {
+                question: "ما معنى 'ما لا يعنيه' في الحديث الشريف؟",
+                options: [
+                    "ما لا يخصه ولا يهمه من أمور الدين والدنيا",
+                    "كل الأفكار والألعاب الرياضية",
+                    "ما يتعلق بواجباته المدرسية فقط",
+                    "مساعدة الآخرين في أوقات الشدة"
+                ],
+                correct: 0
+            },
+            {
+                question: "من فوائد ترك المسلم لما لا يعنيه:",
+                options: [
+                    "كسب محبة الله تعالى والناس وزيادة الحسنات",
+                    "إضاعة الوقت في ألعاب الفيديو",
+                    "معرفة أسرار الآخرين وأخبارهم",
+                    "التدخل في شؤون الزملاء"
+                ],
+                correct: 0
+            },
+            {
+                question: "شاهدتَ صديقين يتهامسان في الصف، التصرف الصحيح والمتوافق مع الحديث هو:",
+                options: [
+                    "عدم التدخل والاشتغال بما ينفعني",
+                    "الاقتراب منهما وسؤالهما عما يقولان",
+                    "مشاهدتهما بالغضب وإخبار الجميع",
+                    "محاولة التجسس لمعرفة الموضوع"
+                ],
+                correct: 0
+            },
+            {
+                question: "التجسس والفضول والتدخل في خصوصيات الآخرين يعتبر من الأمور التي:",
+                options: [
+                    "نهى عنها الإسلام لأنها تؤذي الآخرين",
+                    "يحبها الإسلام ويحث عليها",
+                    "لا تؤثر على أخلاق المسلم",
+                    "تساعد في تقوية الصداقات"
+                ],
+                correct: 0
+            },
+            {
+                question: "راوي حديث 'من حسن إسلام المرء تركه ما لا يعنيه' هو الصحابي الجليل:",
+                options: [
+                    "أبو هريرة رضي الله عنه",
+                    "عبد الله بن عمر رضي الله عنهما",
+                    "أنس بن مالك رضي الله عنه",
+                    "أبو بكر الصديق رضي الله عنه"
+                ],
+                correct: 0
+            },
+            {
+                question: "المسلم الذي يستغل وقته فيما يعنيه وينفعه يحقق:",
+                options: [
+                    "حُسن الإسلام وكمال الأخلاق",
+                    "الحديث في الأمور الفارغة",
+                    "إهدار الطاقات والوقت",
+                    "كثرة المشاكل مع الأصدقاء"
+                ],
+                correct: 0
+            },
+            {
+                question: "أي من التصرفات التالية يُعد مثالاً عملياً لتطبيق الدرس؟",
+                options: [
+                    "احترام خصوصية الرسائل الهاتفيّة للآخرين وعدم النظر فيها",
+                    "قراءة رسائل الآخرين دون إذنهم",
+                    "الاستماع لمحادثات الجيران السريّة",
+                    "السؤال عن تفاصيل حياة زملائك الخاصة"
+                ],
+                correct: 0
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let isAnswered = false;
+        let isMuted = false;
+
+        // Audio System using Web Audio API (No External Audio File Dependency)
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+        }
+
+        // Play Motivational Synth Music Loop
+        let musicInterval;
+        function startMotivationalBGM() {
+            if (isMuted || musicInterval) return;
+            initAudio();
+            
+            const notes = [261.63, 329.63, 392.00, 523.25]; // C, E, G, C
+            let noteIdx = 0;
+
+            musicInterval = setInterval(() => {
+                if (isMuted || !audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+
+                    noteIdx = (noteIdx + 1) % notes.length;
+                } catch(e){}
+            }, 500);
+        }
+
+        function stopMotivationalBGM() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
+
+        // Play Sound Effects (Success / Error)
+        function playFX(type) {
+            if (isMuted) return;
+            initAudio();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Happy Arpeggio Sound
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                } else {
+                    // Sad / Wrong Sound
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(140, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                }
+            } catch(e){}
+        }
+
+        function toggleAudio() {
+            isMuted = !isMuted;
+            const bgmIcon = document.getElementById('bgmIcon');
+            const bgmBtn = document.getElementById('bgmToggle');
+            if (isMuted) {
+                stopMotivationalBGM();
+                bgmIcon.className = "fas fa-volume-mute";
+                bgmBtn.classList.replace('bg-amber-400', 'bg-gray-300');
+            } else {
+                startMotivationalBGM();
+                bgmIcon.className = "fas fa-music";
+                bgmBtn.classList.replace('bg-gray-300', 'bg-amber-400');
+            }
+        }
+
+        // Game Flow Controls
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizContainer').classList.remove('hidden');
+            startMotivationalBGM();
+            loadQuestion();
+        }
+
+        // Shuffle Options per question to add fun
+        function shuffleOptions(qObj) {
+            let optionsWithIndex = qObj.options.map((opt, i) => ({ text: opt, isCorrect: i === qObj.correct }));
+            for (let i = optionsWithIndex.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [optionsWithIndex[i], optionsWithIndex[j]] = [optionsWithIndex[j], optionsWithIndex[i]];
+            }
+            return optionsWithIndex;
+        }
+
+        let currentShuffledOptions = [];
+
+        function loadQuestion() {
+            isAnswered = false;
+            const q = questions[currentQuestion];
+            document.getElementById('currentQNum').innerText = currentQuestion + 1;
+            document.getElementById('questionText').innerText = q.question;
+            
+            // Update Progress Bar
+            const progressPercent = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+            // Reset UI States
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+            feedbackBox.className = "hidden p-4 rounded-2xl text-center font-black text-lg mb-4 transition-all";
+            document.getElementById('nextBtn').classList.add('hidden');
+
+            // Render Options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            currentShuffledOptions = shuffleOptions(q);
+
+            currentShuffledOptions.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn bg-white border-2 border-purple-200 hover:border-purple-500 text-gray-800 font-bold p-4 rounded-2xl text-right flex items-center justify-between w-full text-sm md:text-base shadow-sm";
+                btn.innerHTML = `
+                    <span>${opt.text}</span>
+                    <span class="w-7 h-7 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-black mr-2 shrink-0">${index + 1}</span>
+                `;
+                btn.onclick = () => selectOption(index, opt.isCorrect, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(index, isCorrect, btnElement) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const feedbackBox = document.getElementById('feedbackBox');
+            const allOptionBtns = document.getElementById('optionsContainer').children;
+
+            if (isCorrect) {
+                // Correct Answer
+                score++;
+                document.getElementById('score').innerText = score;
+                playFX('correct');
+
+                btnElement.classList.remove('bg-white', 'border-purple-200');
+                btnElement.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+
+                feedbackBox.innerHTML = `<i class="fas fa-check-circle ml-2"></i> ممتاز يا مبدع! 🌟✨`;
+                feedbackBox.classList.remove('hidden');
+                feedbackBox.classList.add('bg-emerald-500', 'text-white', 'shadow-lg');
+            } else {
+                // Incorrect Answer
+                playFX('wrong');
+
+                btnElement.classList.remove('bg-white', 'border-purple-200');
+                btnElement.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-900');
+
+                // Highlight correct answer
+                currentShuffledOptions.forEach((opt, idx) => {
+                    if (opt.isCorrect) {
+                        allOptionBtns[idx].classList.remove('bg-white', 'border-purple-200');
+                        allOptionBtns[idx].classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                    }
+                });
+
+                feedbackBox.innerHTML = `<i class="fas fa-times-circle ml-2"></i> حاول مرة أخرى! 💪✨`;
+                feedbackBox.classList.remove('hidden');
+                feedbackBox.classList.add('bg-rose-500', 'text-white', 'shadow-lg');
+            }
+
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            document.getElementById('finalScore').innerText = `${score} / ${questions.length}`;
+
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+
+            if (score === 7) {
+                resultIcon.innerText = "🏆";
+                resultTitle.innerText = "ممتاز يا مبدع! درجة كاملة 🌟";
+                resultMessage.innerText = "أنت طالب متميز وفاهم لحديث النبي ﷺ بشكل ممتاز!";
+            } else if (score >= 4) {
+                resultIcon.innerText = "🎉";
+                resultTitle.innerText = "أحسنت عملًا يا بطل!";
+                resultMessage.innerText = "نتيجة رائعة، يمكنك المحاولة مجدداً للحصول على العلامة الكاملة!";
+            } else {
+                resultIcon.innerText = "💡";
+                resultTitle.innerText = "حاول مرة أخرى!";
+                resultMessage.innerText = "راجع الدرس جيداً ثم أعد المحاولة للوصول إلى الإبداع!";
+            }
+        }
+
+        function restartGame() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('score').innerText = '0';
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('quizContainer').classList.remove('hidden');
+            loadQuestion();
+        }
+    </script>
+</body>
+</html>
